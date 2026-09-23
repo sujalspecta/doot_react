@@ -9,11 +9,15 @@ File: Custom Bootstrap Css File
 
 
 //Core files
-@import "./node_modules/bootstrap/scss/functions";
-@import "./node_modules/bootstrap/scss/variables";
-@import "variables";
-@import "variables-dark";
-@import "./node_modules/bootstrap/scss/bootstrap";
+//Core files using the modern Sass module system
+// Core files
+// We use global imports with explicit mapping so Bootstrap's internal mixins don't lose scope
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "variables";         // Your local custom variables
+@import "variables-dark";    // Your local custom dark variables
+@import "bootstrap/scss/bootstrap";
+
 
 @import "custom/components/reboot";
 @import "custom/components/backgrounds";

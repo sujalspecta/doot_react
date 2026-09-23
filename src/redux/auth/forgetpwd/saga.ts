@@ -1,13 +1,13 @@
 import { takeEvery, fork, put, all, call } from "redux-saga/effects";
 
-// Login Redux States
+// Import Forget Password Redux States
 import { AuthForgetPassActionTypes } from "./types";
 import {
   authForgetPassApiResponseSuccess,
   authForgetPassApiResponseError,
 } from "./actions";
 
-//Include Both Helper File with needed methods
+// Include Both Helper File with needed methods
 import { getFirebaseBackend } from "../../../helpers/firebase_helper";
 
 import {
@@ -16,12 +16,16 @@ import {
   changePassword as changePasswordApi,
 } from "../../../api/index";
 
+// Clean Vite configuration variable parsing
+import config from "../../../config";
+
 const fireBaseBackend: any = getFirebaseBackend();
 
-//If user is send successfully send mail link then dispatch redux action's are directly from here.
 function* forgetUser({ payload: user }: any) {
   try {
-    if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
+    const defaultAuth = config.DEFAULTAUTH;
+
+    if (defaultAuth === "firebase") {
       yield call(fireBaseBackend.forgetPassword, user.email);
       yield put(
         authForgetPassApiResponseSuccess(
@@ -29,10 +33,8 @@ function* forgetUser({ payload: user }: any) {
           "Reset link are sended to your mailbox, check there first"
         )
       );
-    } else if (process.env.REACT_APP_DEFAULTAUTH === "jwt") {
-      yield call(postJwtForgetPwd, {
-        email: user.email,
-      });
+    } else if (defaultAuth === "jwt") {
+      yield call(postJwtForgetPwd, { email: user.email });
       yield put(
         authForgetPassApiResponseSuccess(
           AuthForgetPassActionTypes.FORGET_PASSWORD,
@@ -40,9 +42,7 @@ function* forgetUser({ payload: user }: any) {
         )
       );
     } else {
-      yield call(postFakeForgetPwd, {
-        email: user.email,
-      });
+      yield call(postFakeForgetPwd, { email: user.email });
       yield put(
         authForgetPassApiResponseSuccess(
           AuthForgetPassActionTypes.FORGET_PASSWORD,
@@ -51,10 +51,11 @@ function* forgetUser({ payload: user }: any) {
       );
     }
   } catch (error: any) {
+    const errorMessage = error?.message || error?.description || "Something went wrong. Please try again.";
     yield put(
       authForgetPassApiResponseError(
         AuthForgetPassActionTypes.FORGET_PASSWORD,
-        error
+        errorMessage
       )
     );
   }
@@ -70,10 +71,11 @@ function* changePassword({ payload: newPassword }: any) {
       )
     );
   } catch (error: any) {
+    const errorMessage = error?.message || error?.description || "Failed to update password.";
     yield put(
       authForgetPassApiResponseError(
         AuthForgetPassActionTypes.CHANGE_PASSWORD,
-        error
+        errorMessage
       )
     );
   }

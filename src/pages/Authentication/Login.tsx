@@ -9,64 +9,57 @@ import {
   UncontrolledTooltip,
 } from "reactstrap";
 
-//Social Media Imports
+// Social Media Imports
 import { GoogleLogin } from "react-google-login";
 import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 
-// router
+// Router
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 
-// validations
+// Validations
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 
-// config
+// Config
 import config from "../../config";
 
-// hooks
+// Hooks
 import { useProfile, useRedux } from "../../hooks/index";
 import { createSelector } from "reselect";
-//actions
+
+// Actions
 import { loginUser, socialLogin } from "../../redux/actions";
 
-// components
+// Components
 import NonAuthLayoutWrapper from "../../components/NonAutnLayoutWrapper";
 import AuthHeader from "../../components/AuthHeader";
 import FormInput from "../../components/FormInput";
 import Loader from "../../components/Loader";
 
 interface LoginProps {}
+
 const Login = (props: LoginProps) => {
-  // global store
+  // Global store
   const { dispatch, useAppSelector } = useRedux();
 
-  // const { isUserLogin, error, loginLoading, isUserLogout } = useAppSelector(
-  //   state => ({
-  //     isUserLogin: state.Login.isUserLogin,
-  //     error: state.Login.error,
-  //     loginLoading: state.Login.loading,
-  //     isUserLogout: state.Login.isUserLogout,
-  //   })
-  // );
-
-
   const errorData = createSelector(
-    (state : any) => state.Login,
+    (state: any) => state.Login,
     (state) => ({
       isUserLogin: state.isUserLogin,
       error: state.error,
       loginLoading: state.loading,
       isUserLogout: state.isUserLogout,
-
     })
   );
+
   // Inside your component
-  const { isUserLogin,error ,loginLoading,isUserLogout} = useAppSelector(errorData);
+  const { isUserLogin, error, loginLoading, isUserLogout } = useAppSelector(errorData);
 
   const navigate = useNavigate();
   const location = useLocation();
   const [redirectUrl, setRedirectUrl] = useState("/");
+
   useEffect(() => {
     const url =
       location.state && location.state.from
@@ -74,6 +67,7 @@ const Login = (props: LoginProps) => {
         : "/";
     setRedirectUrl(url);
   }, [location]);
+
   useEffect(() => {
     if (isUserLogin && !loginLoading && !isUserLogout) {
       navigate(redirectUrl);
@@ -101,7 +95,8 @@ const Login = (props: LoginProps) => {
   } = methods;
 
   const onSubmitForm = async (values: object) => {
-    dispatch(loginUser(values));
+    // Pass clean parameters straight to the updated Saga (no history needed anymore)
+    dispatch(loginUser({ user: values }));
   };
 
   const { userProfile, loading } = useProfile();
@@ -113,34 +108,34 @@ const Login = (props: LoginProps) => {
   const signIn = (res: any, type: "google" | "facebook") => {
     if (type === "google" && res) {
       const postData = {
-        name: res.profileObj.name,
-        email: res.profileObj.email,
-        token: res.tokenObj.access_token,
+        name: res.profileObj?.name,
+        email: res.profileObj?.email,
+        token: res.tokenObj?.access_token,
         idToken: res.tokenId,
       };
-      dispatch(socialLogin(postData, type));
+      dispatch(socialLogin({ data: postData, type }));
     } else if (type === "facebook" && res) {
       const postData = {
         name: res.name,
         token: res.accessToken,
       };
-      dispatch(socialLogin(postData, type));
+      dispatch(socialLogin({ data: postData, type }));
     }
   };
 
-  //handleFacebookLoginResponse
+  // HandleFacebookLoginResponse
   const facebookResponse = (response: object) => {
     signIn(response, "facebook");
   };
 
-  //handleGoogleLoginResponse
+  // HandleGoogleLoginResponse
   const googleResponse = (response: object) => {
     signIn(response, "google");
   };
 
   return (
     <NonAuthLayoutWrapper>
-      <Row className=" justify-content-center my-auto">
+      <Row className="justify-content-center my-auto">
         <Col sm={8} lg={6} xl={5} className="col-xxl-4">
           <div className="py-md-5 py-4">
             <AuthHeader
@@ -148,12 +143,13 @@ const Login = (props: LoginProps) => {
               subtitle="Sign in to continue to Doot."
             />
 
-            {error && <Alert color="danger">{error}</Alert>}
+            {error && (
+              <Alert color="danger">
+                {typeof error === "object" ? error.message || JSON.stringify(error) : String(error)}
+              </Alert>
+            )}
 
-            <Form
-              onSubmit={handleSubmit(onSubmitForm)}
-              className="position-relative"
-            >
+            <Form onSubmit={handleSubmit(onSubmitForm)} className="position-relative">
               {loginLoading && <Loader />}
               <div className="mb-3">
                 <FormInput
@@ -184,15 +180,8 @@ const Login = (props: LoginProps) => {
               </div>
 
               <div className="form-check form-check-info font-size-16">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="remember-check"
-                />
-                <Label
-                  className="form-check-label font-size-14"
-                  htmlFor="remember-check"
-                >
+                <input className="form-check-input" type="checkbox" id="remember-check" />
+                <Label className="form-check-label font-size-14" htmlFor="remember-check">
                   Remember me
                 </Label>
               </div>
@@ -226,45 +215,40 @@ const Login = (props: LoginProps) => {
                         )}
                       />
                     </div>
-                    <UncontrolledTooltip placement="top" target="facebook">
+                    <UncontrolledTooltip placement="top" target="facebook" fade={false} transition={{ timeout: 150 }}>
                       Facebook
                     </UncontrolledTooltip>
                   </div>
                   <div className="col-4">
                     <div>
-                      <button
-                        type="button"
-                        className="btn btn-light w-100"
-                        id="twitter"
-                      >
+                      <button type="button" className="btn btn-light w-100" id="twitter">
                         <i className="mdi mdi-twitter text-info"></i>
                       </button>
                     </div>
-                    <UncontrolledTooltip placement="top" target="twitter">
+                    <UncontrolledTooltip placement="top" target="twitter" fade={false} transition={{ timeout: 150 }}>
                       Twitter
                     </UncontrolledTooltip>
                   </div>
                   <div className="col-4">
                     <div>
                       <GoogleLogin
-                        clientId={
-                          config.GOOGLE.CLIENT_ID ? config.GOOGLE.CLIENT_ID : ""
-                        }
-                        render={renderProps => (
+                        clientId={config.GOOGLE.CLIENT_ID ? config.GOOGLE.CLIENT_ID : ""}
+                        onSuccess={googleResponse}
+                        onFailure={googleResponse}
+                        render={(renderProps) => (
                           <button
                             type="button"
                             className="btn btn-light w-100"
                             id="google"
                             onClick={renderProps.onClick}
+                            disabled={renderProps.disabled}
                           >
                             <i className="mdi mdi-google text-danger"></i>
                           </button>
                         )}
-                        onSuccess={googleResponse}
-                        onFailure={() => {}}
                       />
                     </div>
-                    <UncontrolledTooltip placement="top" target="google">
+                    <UncontrolledTooltip placement="top" target="google" fade={false} transition={{ timeout: 150 }}>
                       Google
                     </UncontrolledTooltip>
                   </div>
@@ -272,15 +256,11 @@ const Login = (props: LoginProps) => {
               </div>
             </Form>
 
-            <div className="mt-5 text-center text-muted">
+            <div className="mt-5 text-center">
               <p>
                 Don't have an account ?{" "}
-                <Link
-                  to="/auth-register"
-                  className="fw-medium text-decoration-underline"
-                >
-                  {" "}
-                  Register
+                <Link to="/register" className="font-weight-medium text-primary">
+                  Signup now
                 </Link>
               </p>
             </div>

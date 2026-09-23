@@ -11,7 +11,15 @@ const postFakeForgetPwd = (data: any) =>
 const postJwtForgetPwd = (data: any) =>
   api.create(url.POST_FAKE_JWT_PASSWORD_FORGET, data);
 
-const postFakeLogin = (data: any) => api.create(url.POST_FAKE_LOGIN, data);
+// Replace your old postFakeLogin line with this local interceptor:
+const postFakeLogin = (data: any) => {
+  return Promise.resolve({
+    id: 1,
+    name: "Admin User",
+    email: data.email,
+    token: "mock-jwt-token-string",
+  });
+};
 
 const postJwtLogin = (data: any) => api.create(url.POST_FAKE_JWT_LOGIN, data);
 
